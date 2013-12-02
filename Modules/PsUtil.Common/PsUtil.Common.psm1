@@ -366,3 +366,4 @@ function Invoke-MSBuild{
         }
     }
 }
+
