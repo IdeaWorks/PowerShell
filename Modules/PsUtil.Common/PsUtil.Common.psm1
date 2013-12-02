@@ -366,3 +366,37 @@ function Invoke-MSBuild{
         }
     }
 }
+
+function Set-EnvVariable{
+    [CmdletBinding()]
+    Param(
+        [Parameter(Mandatory = $true)]$EnvVariable,
+        [Parameter(Mandatory = $true)]$Value,
+        [ValidateSet("Machine","User")] $Scope = "Machine",
+        [Parameter(Mandatory = $true)]
+        [ValidateSet("Path","SimpleValue")] $VariableType,
+        [switch] $Overwrite
+        )
+    Process{
+        $currentVal = [Environment]::GetEnvironmentVariable($EnvVariable,$Scope)
+
+        if (!($currentVal| Select-String -SimpleMatch $Value)){
+            
+            if ($Overwrite){
+                $currentVal = $Value
+            }else {
+                switch ($VariableType) {
+                    "Path" { $currentVal += ';' + $Value}
+                }
+            }
+
+            [Environment]::SetEnvironmentVariable($EnvVariable, $currentVal, $Scope)
+    
+            Write-Verbose "[$Value] has been added/modified to the $EnvVariable."
+        }else{
+            Write-Verbose "[$Value] is already exist in the $EnvVariable."
+        }
+        $updatedVar = [Environment]::GetEnvironmentVariable($EnvVariable,$Scope)
+        Write-Verbose "Current value of [$EnvVariable]: $updatedVar"
+    }
+}
