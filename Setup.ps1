@@ -17,3 +17,5 @@ if ($credPathInput -eq ''){
 }
 
 Set-EnvVariable -EnvVariable 'PSCredentialPath' -Value $credPathInput -VariableType Path -Overwrite -Verbose
+
+
