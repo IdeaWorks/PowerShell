@@ -79,3 +79,50 @@ function Add-ComputerToTrustedHosts($hostName){
 
 # We can introduce a new function to return the plain user/pass (for using in sqlcmd or other thirdparty commands)
 
+
+
+
+function Protect-Data{
+    Param(
+        [Parameter(Mandatory = $true)] $PlainData,
+        [ValidateSet("UTF8", "ByteArray")] $InputType = "UTF8",
+        [ValidateSet("CurrentUser","LocalMachine")] $Scope = "CurrentUser",
+        [ValidateSet("Base64String", "ByteArray")] $OutputType = "Base64String"
+    )
+    Process{
+        $protectionScope = $protectionScope = [System.Security.Cryptography.DataProtectionScope]::CurrentUser
+        if ($Scope -eq "LocalMachine"){
+            $protectionScope = [System.Security.Cryptography.DataProtectionScope]::LocalMachine
+        }
+        $plainBytes = Convert-Data -InputData $PlainData -InputType $InputType -OutputType ByteArray
+        
+        $cipher = [System.Security.Cryptography.ProtectedData]::Protect($plainBytes, $null, $protectionScope)
+        
+        $result = Convert-Data -InputData $cipher -InputType ByteArray -OutputType $OutputType
+        
+        return $result
+    }
+}
+
+function Unprotect-Data{
+    Param(
+        [Parameter(Mandatory = $true)]$CipherData,
+        [ValidateSet("Base64String", "ByteArray")] $InputType = "Base64String",
+        [ValidateSet("CurrentUser","LocalMachine")] $Scope = "CurrentUser",
+        [ValidateSet("UTF8", "ByteArray")] $OutputType = "UTF8"
+    )
+    Process{
+        $protectionScope = $protectionScope = [System.Security.Cryptography.DataProtectionScope]::CurrentUser
+        if ($Scope -eq "LocalMachine"){
+            $protectionScope = [System.Security.Cryptography.DataProtectionScope]::LocalMachine
+        }
+
+        $cipherBytes = Convert-Data -InputData $CipherData -InputType $InputType -OutputType ByteArray
+
+        $plainBytes = [System.Security.Cryptography.ProtectedData]::Unprotect($cipherBytes, $null, $protectionScope)
+
+        $result = Convert-Data -InputData $plainBytes -InputType ByteArray -OutputType $OutputType
+
+        return $result
+    }
+}

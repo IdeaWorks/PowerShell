@@ -400,3 +400,33 @@ function Set-EnvVariable{
         Write-Verbose "Current value of [$EnvVariable]: $updatedVar"
     }
 }
+
+
+
+function Convert-Data {
+    param(
+        [Parameter(Mandatory = $true)] $InputData,
+        [Parameter(Mandatory = $true)]
+        [ValidateSet("UTF8", "Base64String", "ByteArray")] 
+        $InputType,
+        [Parameter(Mandatory = $true)]
+        [ValidateSet("UTF8", "Base64String", "ByteArray")]
+        $OutputType
+
+    )
+    Process{
+        switch ($InputType){
+            "ByteArray" { $inputBytes = $InputData}
+            "UTF8" {$inputBytes= [System.Text.Encoding]::UTF8.GetBytes($InputData) }
+            "Base64String" {$inputBytes = [System.Convert]::FromBase64String($InputData) }
+        }
+
+        switch ($OutputType){
+            "ByteArray" { $result = $inputBytes}
+            "UTF8" { $result= [System.Text.Encoding]::UTF8.GetString($inputBytes) }
+            "Base64String" {$result = [System.Convert]::ToBase64String($inputBytes) }
+        }
+        return $result
+    }
+
+}
