@@ -90,6 +90,7 @@ function Protect-Data{
         [ValidateSet("Base64String", "ByteArray")] $OutputType = "Base64String"
     )
     Process{
+        [reflection.assembly]::loadwithpartialname("System.Security") | Out-Null
         $protectionScope = $protectionScope = [System.Security.Cryptography.DataProtectionScope]::CurrentUser
         if ($Scope -eq "LocalMachine"){
             $protectionScope = [System.Security.Cryptography.DataProtectionScope]::LocalMachine
@@ -112,6 +113,7 @@ function Unprotect-Data{
         [ValidateSet("UTF8", "ByteArray")] $OutputType = "UTF8"
     )
     Process{
+        [reflection.assembly]::loadwithpartialname("System.Security") | Out-Null
         $protectionScope = $protectionScope = [System.Security.Cryptography.DataProtectionScope]::CurrentUser
         if ($Scope -eq "LocalMachine"){
             $protectionScope = [System.Security.Cryptography.DataProtectionScope]::LocalMachine
