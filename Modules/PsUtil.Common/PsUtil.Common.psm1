@@ -99,27 +99,60 @@ function Install-AssemblyToGAC(){
 #Compression
 
 function Compress-Item(){
+    [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)] $ArchivePath,
         [Parameter(Mandatory = $true)] $SourcePath,
-        [switch] $TestArchiveFile,
-        [switch] $NewArchive
+        [ValidateSet("7z", "Zip", "Tar")] $CompressionType,
+        [ValidateSet("Store", "Fastest", "Fast", "Normal", "Maximum", "Ultra")] $CompressionLevel,
+        [switch] $TestArchive,
+        [switch] $NewArchive,
+        [switch] $RemoveSourceAfterArchiving
     )
     Process{
         $7zipTool = Join-Path $env:ProgramFiles '7-Zip\7z.exe'
+        if (!(Test-Path $7zipTool)){
+            throw 'Path not found ' + $7zipTool
+        }
 
         $sw = [Diagnostics.Stopwatch]::StartNew()
         if(Test-Path $ArchivePath){
-            Remove-Item $ArchivePath -Recurse -Force -Verbose
+            Remove-Item $ArchivePath -Recurse -Force -Verbose:($PSBoundParameters['Verbose'] -eq $true)
         }
         
         
-        Write-Host 'Compressing' $SourcePath 'to' $ArchivePath
-        
+        Write-Host Compressing $SourcePath to $ArchivePath
 
-        & $7zipTool a -t7z $ArchivePath $SourcePath #'-oD:\Environments\Decompress'        
+        switch ($CompressionType){
+            7z{ $comType ='-t7z' }
+            Zip{ $comType ='-tzip' }
+            Tar{ $comType ='-ttar' }
+        }
+
+        switch ($CompressionLevel){
+            Store{ $comLevel ='-mx0' }
+            Fastest{ $comLevel ='-mx1' }
+            Fast{ $comLevel ='-mx3' }
+            Normal{ $comLevel ='-mx5' }
+            Maximum{ $comLevel ='-mx7' }
+            Ultra{ $comLevel ='-mx9' }
+        }
+
+        & $7zipTool a $comType $comLevel $ArchivePath $SourcePath 
         if ($LASTEXITCODE -gt 0){
             throw 
+        }
+
+        if ($TestArchive){
+            & $7zipTool t $ArchivePath
+            if ($LASTEXITCODE -gt 0){
+                throw 
+            }
+        }
+        
+        if($RemoveSourceAfterArchiving){
+            Write-Host Removing Source $SourcePath
+            Remove-Item $SourcePath -Recurse -Force -Verbose:($PSBoundParameters['Verbose'] -eq $true)
         }
 
         $sw.Stop()
@@ -135,7 +168,10 @@ function Expand-Item(){
     )
     Process{
         $7zipTool = Join-Path $env:ProgramFiles '7-Zip\7z.exe'
-        
+        if (!(Test-Path $7zipTool)){
+            throw 'Path not found ' + $7zipTool
+        }
+
         $sw = [Diagnostics.Stopwatch]::StartNew()
         if((Test-Path $DestinationPath) -and $CleanFirst ){
             Write-Host 'Cleaning up...'
