@@ -74,31 +74,65 @@ function Copy-ItemToRemoteComputer (){
                 }
             } 
             
+            Copy-RemoteItem -ComputerName $ComputerName -LocalPath $SrcPath -RemotePath $DesRemotePath -Direction LocalToRemote -Credential $Credential
+            
+        } catch {
+            throw 
+        } 
+    }
+}
+
+function Copy-RemoteItem (){
+    [CmdletBinding()]
+    Param (
+        [Parameter(Mandatory = $true)] $ComputerName, 
+        [Parameter(Mandatory = $true)] $LocalPath, 
+        [Parameter(Mandatory = $true)] $RemotePath, 
+        [Parameter(Mandatory = $true)]
+        [ValidateSet("LocalToRemote", "RemoteToLocal")] $Direction,
+        [switch]$RemotePathIsUnc,
+        $Credential
+    )
+    Process {
+        try {
+            if ($Credential -eq $null){
+                $Credential = Read-CredentialFromDisk $ComputerName
+            }
             $letter = "Z"
             $drive = $letter + ':\'
-            $uncPath = '\\' + $computerName + '\' + $desRemotePath.Replace(":","$")
+            $uncPath = $RemotePath
+            
+            if (!$RemotePathIsUnc){
+                $uncPath = '\\' + $computerName + '\' + $RemotePath.Replace(":","$")
+            }
             
             #Create a mapped netwerk drive
-            New-PSDrive -Name $letter -Root $uncPath -PSProvider FileSystem -Credential $credential -Verbose:($PSBoundParameters['Verbose'] -eq $true)
-            #Write-Host 'Connected to' $uncPath
+            New-PSDrive -Name $letter -Root $uncPath -PSProvider FileSystem -Credential $Credential -Verbose:($PSBoundParameters['Verbose'] -eq $true)
             
-            Write-Host 'Copying from' $srcPath 'to' $uncPath
+            switch ($Direction){
+                LocalToRemote{
+                    $srcPath = $LocalPath
+                    $desPath = $drive
+                }
+                RemoteToLocal{
+                    $srcPath = $drive
+                    $desPath = $LocalPath
+                }
+            }
+            
+            Write-Host 'Copying from' $srcPath 'to' $desPath
             #Copy the files from source to the destination path
-            Copy-Item $srcPath $drive -Force -Recurse -Verbose:($PSBoundParameters['Verbose'] -eq $true) -ErrorAction Stop 
+            Copy-Item $srcPath $desPath -Force -Recurse -Verbose:($PSBoundParameters['Verbose'] -eq $true) -ErrorAction Stop 
             
-            #& dir 
-            #Start-Sleep 30
-
             #Clean up the Mapped network drive by deleting the PSDrive
             Remove-PSDrive -Name $letter -Verbose:($PSBoundParameters['Verbose'] -eq $true)
-
-            #Write-Host 'Disconnected from' $uncPath
 
         } catch {
             throw 
         } 
     }
 }
+
 
 #GAC functions
 function Install-AssemblyToRemoteGAC (){
