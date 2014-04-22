@@ -10,28 +10,47 @@ function Read-CredentialFromDisk($CredentialKey){
     return $credential
 }
 
-
-
-function Save-CredentialToDisk{
+function Set-Credential{
     Param (
-        [Parameter(Mandatory = $true)] $CredentialKey
+        [Parameter(Mandatory = $true)] $UserName,
+        [Parameter(Mandatory = $true)] $Password
     )
     Process{
         try {
+            $secPass = ConvertTo-SecureString $Password -AsPlainText -Force
+            $Credential = New-Object System.Management.Automation.PSCredential ($UserName, $secPass)
+            return $Credential
+        } catch {
+            throw
+        }
+    }
+}
 
-            $cred = Get-Credential
+function Save-CredentialToDisk{
+    Param (
+        [Parameter(Mandatory = $true)] $CredentialKey,
+		$Credential,
+		[Switch] $Quiet
+    )
+    Process{
+        try {
+            if ($Credential -eq $null){
+               $Credential = Get-Credential
+            }
         
             $CredentialKeyFile = $CredentialKey +'.ps1.credential'
             $credPath = Join-Path $env:PSCredentialPath $CredentialKeyFile
 
-            $cred | Export-CliXml $credPath
+            $Credential | Export-CliXml $credPath
             Write-Host [$credPath] is created.
 
-            $credential = Read-CredentialFromDisk $CredentialKey
+            if (!$Quiet){
+                $cred = Read-CredentialFromDisk $CredentialKey
 
-            Add-Type –AssemblyName System.Windows.Forms
-            [System.Windows.Forms.MessageBox]::Show(
-                "Username= " + $credential.UserName + "    Password= " + $credential.GetNetworkCredential().Password)
+                Add-Type –AssemblyName System.Windows.Forms
+                [System.Windows.Forms.MessageBox]::Show(
+                    "Username= " + $cred.UserName + "    Password= " + $cred.GetNetworkCredential().Password)
+            }
    
         } catch {
             throw
