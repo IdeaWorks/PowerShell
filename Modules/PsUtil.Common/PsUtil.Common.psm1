@@ -163,7 +163,7 @@ function Compress-Item(){
 function Expand-Item(){
     param(
         [Parameter(Mandatory = $true)] $ArchivePath,
-        [Parameter(Mandatory = $true)] $DestinationPath,
+        $DestinationPath,
         $CleanFirst
     )
     Process{
@@ -173,7 +173,10 @@ function Expand-Item(){
         }
 
         $sw = [Diagnostics.Stopwatch]::StartNew()
-        if((Test-Path $DestinationPath) -and $CleanFirst ){
+        if ($DestinationPath -eq $null){
+            $DestinationPath = (Get-Item $ArchivePath).Directory.FullName   
+        } 
+        elseif((Test-Path $DestinationPath) -and $CleanFirst ){
             Write-Host 'Cleaning up...'
             Remove-Item $DestinationPath -Recurse -Force
         }
@@ -181,13 +184,13 @@ function Expand-Item(){
         Write-Host 'Extracting' $ArchivePath 'to' $DestinationPath
 
         $DestinationPath = '-o' + $DestinationPath
-        & $7zipTool x $ArchivePath $DestinationPath -aoa #'-oD:\Environments\Decompress'        
+        & $7zipTool x $ArchivePath $DestinationPath -aoa         
         if ($LASTEXITCODE -gt 0){
             throw 
         }
 
         $sw.Stop()
-        Write-Host 'Operation Time:' $sw.Elapsed.Hours ':' $sw.Elapsed.Minutes ':' $sw.Elapsed.Minutes 
+        Write-Host 'Operation Time:' $sw.Elapsed.Hours ':' $sw.Elapsed.Minutes ':' $sw.Elapsed.Seconds 
     }
 
 }
@@ -395,8 +398,12 @@ function Invoke-MSBuild{
     )
     Process{
         $msBuildTool = Join-Path $env:windir 'Microsoft.NET\Framework64\v4.0.30319\MSBuild.exe'
+        if ($Properties -ne $null){
+            $propArg = '/p:'+$Properties
+        }
 
-        & $msBuildTool $ProjectFile /p:$Properties /t:$Targets
+
+        & $msBuildTool $ProjectFile $propArg /t:$Targets
         if ($LASTEXITCODE -gt 0){
             throw 'ERROR in building project ' + $ProjectFile
         }

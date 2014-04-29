@@ -15,6 +15,7 @@ function Invoke-SqlServerCmdByFile (
 }
 
 function Invoke-SqlServerCmd {
+    [CmdletBinding()]
     Param (
         [Parameter(Mandatory = $true)] $SqlCommand, 
         [Parameter(Mandatory = $true)] $SqlInstance, 
@@ -27,9 +28,9 @@ function Invoke-SqlServerCmd {
     
         Write-Host Executing command on $sqlInstance ...
     
-        Invoke-Sqlcmd -Query $SqlCommand -ErrorAction 'Stop' -ServerInstance $SqlInstance -Verbose -Username $Credential.UserName -Password $Credential.GetNetworkCredential().Password
+        Invoke-Sqlcmd -Query $SqlCommand -ErrorAction 'Stop' -ServerInstance $SqlInstance -Username $Credential.UserName -Password $Credential.GetNetworkCredential().Password  -Verbose:($PSBoundParameters['Verbose'] -eq $true) 
     
-        Write-Host 'SQL Server command is executed.'
+        Write-Verbose 'SQL command is executed.'
     }
 }
 

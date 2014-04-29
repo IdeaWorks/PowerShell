@@ -66,25 +66,30 @@ function Update-Svn ()
 {
     param(
         [Parameter(Mandatory = $true)] $WorkingFolderPath,
-        #[Parameter(Mandatory = $true)] $RelativeUrl,
-        [Parameter(Mandatory = $true)] $RepositoryUrl,
-        $Credential
+        $RepositoryUrl,
+        $Credential,
+        [Switch] $Quiet,
+        [Switch] $IgnoreCredential
+
+        
     )
     Process{
         
-        if ($Credential -eq $null){
-            $Credential = Read-SvnCredentialFromDisk -RepositoryUrl $RepositoryUrl
+        if (!$IgnoreCredential){
+            if ($Credential -eq $null){
+                $Credential = Read-SvnCredentialFromDisk -RepositoryUrl $RepositoryUrl
+            }
+            $password = $Credential.GetNetworkCredential().Password
+            $username = $Credential.UserName
+            $credArgs = '--username ' + $username +' --password ' + $password
+        }    
+        
+        if ($Quiet){
+            $quietArg = '--quiet'
         }
-            
-        #$url = $RepositoryUrl + $RelativeUrl
-
         Write-Host Performing Svn Update on $WorkingFolderPath
-        
-        $password = $Credential.GetNetworkCredential().Password
-        $username = $Credential.UserName
-        #$arguments = $url, $ExportPath
-        
-        & svn update $WorkingFolderPath --quiet --username $username --password $password
+
+        & svn update $WorkingFolderPath $quietArg $credArgs
         
         if ($LASTEXITCODE -gt 0){
             throw
