@@ -164,7 +164,8 @@ function Expand-Item(){
     param(
         [Parameter(Mandatory = $true)] $ArchivePath,
         $DestinationPath,
-        $CleanFirst
+        $CleanFirst,
+        [Switch] $IgnoreFullPath
     )
     Process{
         $7zipTool = Join-Path $env:ProgramFiles '7-Zip\7z.exe'
@@ -173,6 +174,8 @@ function Expand-Item(){
         }
 
         $sw = [Diagnostics.Stopwatch]::StartNew()
+
+        #Destination path
         if ($DestinationPath -eq $null){
             $DestinationPath = (Get-Item $ArchivePath).Directory.FullName   
         } 
@@ -180,11 +183,18 @@ function Expand-Item(){
             Write-Host 'Cleaning up...'
             Remove-Item $DestinationPath -Recurse -Force
         }
+        $DestinationPath = '-o ' + $DestinationPath
+
+        #Expansion switch
+        $expansionSwitch = 'x'
+        if ($IgnoreFullPath){
+            $expansionSwitch = 'e'
+        }
 
         Write-Host 'Extracting' $ArchivePath 'to' $DestinationPath
 
-        $DestinationPath = '-o' + $DestinationPath
-        & $7zipTool x $ArchivePath $DestinationPath -aoa         
+
+        & $7zipTool $expansionSwitch $ArchivePath $DestinationPath -aoa         
         if ($LASTEXITCODE -gt 0){
             throw 
         }

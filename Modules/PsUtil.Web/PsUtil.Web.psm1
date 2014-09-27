@@ -1,28 +1,65 @@
-﻿
-
-function Get-IISWebSite($ComputerName, $WebSiteName){
-    Import-Module PsUtil.Remoting
-    $siteObj = Invoke-ScriptBlock -ComputerName $ComputerName -Arguments $WebSiteName -scriptBlock {
-        param ($siteName)
-        Import-Module WebAdministration
-        $siteName = 'IIS:\sites\' + $siteName
-        $siteObj = Get-Item $siteName | select *
-        #Write-Host $siteObj
-        return $siteObj
-        
-    }
-    return $siteObj
-
-}
-
-function Get-IISWebSitePhysicalPath(){
+﻿function Get-IISWebSitePhysicalPath(){
     param(
         $ComputerName,
         $WebSiteName
     )
     Process{
-        $site = Get-IISWebSite -ComputerName $computerName -WebSiteName $WebSiteName
-        $physicalPath = $site.PhysicalPath.Replace("%SystemDrive%", $env:SystemDrive)
+        $item = Get-IISWebItem -ComputerName $computerName -Name $WebSiteName
+        $physicalPath = $item.PhysicalPath
         return $physicalPath
     }
 }
+
+function Get-IISWebApplication(){
+    param(
+        $ComputerName,
+        [Parameter(Mandatory = $true)]$Name
+    )
+    
+    $webApp = Invoke-ScriptBlock -ComputerName $ComputerName -Arguments $Name -scriptBlock {
+        param($name)
+        #Import-Module WebAdministration
+        $res = Get-WebApplication -Name $name | select *
+        $res.PhysicalPath = $res.PhysicalPath.Replace("%SystemDrive%", $env:SystemDrive)
+        return $res
+    }
+    return $webApp
+}
+
+function Get-IISWebSite(){
+    param(
+        $ComputerName,
+        [Parameter(Mandatory = $true)]$Name
+    )
+    
+    $webSite = Invoke-ScriptBlock -ComputerName $ComputerName -Arguments $Name -scriptBlock {
+        param($name)
+        #Import-Module WebAdministration
+        $res = Get-Website -Name $name | select id, name, physicalPath, enabledProtocols, applicationPool, state
+        $res.physicalPath = $res.physicalPath.Replace("%SystemDrive%", $env:SystemDrive)
+       
+        return $res
+    }
+    return $webSite
+}
+
+function Get-IISWebItem(){
+    param(
+        $ComputerName,
+        [Parameter(Mandatory = $true)]$Name
+    )
+    
+    $res = Invoke-ScriptBlock -ComputerName $ComputerName -Arguments $Name -scriptBlock {
+        param($name)
+        Import-Module WebAdministration
+        $name = "IIS:sites/" + $name
+        $res = Get-Item $name | select id, name, physicalPath, enabledProtocols, applicationPool, state
+        $res.physicalPath = $res.physicalPath.Replace("%SystemDrive%", $env:SystemDrive)
+       
+        return $res
+    }
+    return $res
+}
+
+
+

@@ -10,7 +10,7 @@ function Read-CredentialFromDisk($CredentialKey){
     return $credential
 }
 
-function Set-Credential{
+function ConvertTo-Credential{
     Param (
         [Parameter(Mandatory = $true)] $UserName,
         [Parameter(Mandatory = $true)] $Password

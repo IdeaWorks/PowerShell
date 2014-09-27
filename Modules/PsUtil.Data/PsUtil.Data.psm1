@@ -9,7 +9,7 @@ function Invoke-SqlServerCmdByFile (
     
     Write-Host Executing [$SqlFile] in $SqlInstance ...
     
-    Invoke-Sqlcmd -InputFile $SqlFile -ErrorAction 'Stop' -ServerInstance $SqlInstance -Verbose -Username $Credential.UserName -Password $Credential.GetNetworkCredential().Password
+    Invoke-Sqlcmd -InputFile $SqlFile -ErrorAction 'Stop' -ServerInstance $SqlInstance -Verbose -Username $Credential.UserName -Password $Credential.GetNetworkCredential().Password -QueryTimeout 0
     
     Write-Host 'SQL Server command is executed.'
 }
@@ -28,7 +28,7 @@ function Invoke-SqlServerCmd {
     
         Write-Host Executing command on $sqlInstance ...
     
-        Invoke-Sqlcmd -Query $SqlCommand -ErrorAction 'Stop' -ServerInstance $SqlInstance -Username $Credential.UserName -Password $Credential.GetNetworkCredential().Password  -Verbose:($PSBoundParameters['Verbose'] -eq $true) 
+        Invoke-Sqlcmd -Query $SqlCommand -ErrorAction 'Stop' -ServerInstance $SqlInstance -Username $Credential.UserName -Password $Credential.GetNetworkCredential().Password  -QueryTimeout 0 -Verbose:($PSBoundParameters['Verbose'] -eq $true) 
     
         Write-Verbose 'SQL command is executed.'
     }
