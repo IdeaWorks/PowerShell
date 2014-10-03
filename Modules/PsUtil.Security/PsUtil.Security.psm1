@@ -30,12 +30,14 @@ function Save-CredentialToDisk{
     Param (
         [Parameter(Mandatory = $true)] $CredentialKey,
 		$Credential,
+        $UserName,
 		[Switch] $Quiet
     )
     Process{
         try {
             if ($Credential -eq $null){
-               $Credential = Get-Credential
+                $message = 'Credential for ' + $CredentialKey
+                $Credential = Get-Credential -UserName $UserName -Message $message
             }
         
             $CredentialKeyFile = $CredentialKey +'.ps1.credential'

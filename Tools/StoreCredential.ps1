@@ -50,5 +50,5 @@ if ($CredentialKey -eq $null){
         $AddToTrustedHosts = $true
     }
 
-    SaveCredential -CredentialKey $CredentialKey -AddToTrustedHosts $AddToTrustedHosts -UserName $UserName
+    SaveCredential -CredentialKey $CredentialKey -AddToTrustedHosts:$AddToTrustedHosts -UserName $UserName
 }
