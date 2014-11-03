@@ -98,3 +98,26 @@ function Update-Svn ()
     }
 }
 
+function Backup-Svn ()
+{
+    param(
+        [Parameter(Mandatory = $true)] $Repository,
+        [Parameter(Mandatory = $true)] $BackupTo,
+        [Switch] $Quiet
+    )
+    Process{
+        
+        if ($Quiet){
+            $quietArg = '--quiet'
+        }
+        Write-Host Backing up [$Repository] to $BackupTo ...
+
+        & svnadmin hotcopy $Repository $BackupTo $quietArg 
+        
+        if ($LASTEXITCODE -gt 0){
+            throw
+        }
+        Write-Host 'Svn Backup finished successfully.'
+    }
+}
+

@@ -21,8 +21,8 @@ function Copy-RemoteItemToNet {
             $driveLetter =$letter + ':\'
             Copy-Item $srcPath $driveLetter -Force -Verbose
         
-            #Clean up the Mapped network drive by deleting the PSDrive
-            Remove-PSDrive -Name $letter -Verbose:($PSBoundParameters['Verbose'] -eq $true)
+            #Clean up the Mapped network drives
+            & Net use * /delete /y
         }
     }
 }
@@ -133,6 +133,22 @@ function Copy-RemoteItem (){
     }
 }
 
+function Backup-RemoteItem(){
+    [CmdletBinding()]
+    Param (
+        [Parameter(Mandatory = $true)] $ComputerName, 
+        [Parameter(Mandatory = $true)] $PathToArchive, 
+        [Parameter(Mandatory = $true)] $ArchiveFileName,
+        [Parameter(Mandatory = $true)] $DesComputerName,  
+        [Parameter(Mandatory = $true)] $DesPath
+    )
+    $archPath = Join-Path $PathToArchive $ArchiveFileName
+    Invoke-ScriptBlock -ComputerName $ComputerName -Arguments $PathToArchive,$archPath -ScriptBlock{
+        param ($srcPath,$archPath)
+        Compress-Item -ArchivePath $archPath -SourcePath $srcPath 
+    }
+    Copy-RemoteItemToNet -srcMachine $ComputerName -srcPath $archPath -desMachine $DesComputerName -desPath $DesPath
+}
 
 #GAC functions
 function Install-AssemblyToRemoteGAC (){

@@ -121,7 +121,7 @@ function Compress-Item(){
         }
         
         
-        Write-Host Compressing $SourcePath to $ArchivePath
+        Write-Verbose "Compressing $SourcePath to $ArchivePath ..."
 
         switch ($CompressionType){
             7z{ $comType ='-t7z' }
@@ -384,8 +384,6 @@ function Send-NotificationEmail ($subject, $body, $recipients, $credRootPath, $c
     $from = "t2p.notify@gmail.com"
     $smtpServer = "smtp.gmail.com"
     $smtpPort = "587"
-    #$userName = "t2p.notify@gmail.com"
-    #$password = "esst2pweb2"
     if ($subject -eq ''){
         $subject = "Automated Email From Powershell"
     }
