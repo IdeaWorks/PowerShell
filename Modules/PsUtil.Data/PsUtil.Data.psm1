@@ -19,18 +19,23 @@ function Invoke-SqlServerCmd {
     Param (
         [Parameter(Mandatory = $true)] $SqlCommand, 
         [Parameter(Mandatory = $true)] $SqlInstance, 
-        $Credential
+        $Credential,
+        [Switch]$TrustedConnection
     )
     Process {
-        if ($Credential -eq $null){
+        if (!$TrustedConnection -and $Credential -eq $null){
             $Credential = Read-DbCredentialFromDisk -CredentialKey $sqlInstance -DbType MsSql
         }
     
-        Write-Host Executing command on $sqlInstance ...
+        Write-Verbose "Executing command on $sqlInstance ..."
+        if ($TrustedConnection){
+            Invoke-Sqlcmd -Query $SqlCommand -ErrorAction 'Stop' -ServerInstance $SqlInstance -QueryTimeout 0 -Verbose:($PSBoundParameters['Verbose'] -eq $true) 
+        }
+        else{
+            Invoke-Sqlcmd -Query $SqlCommand -ErrorAction 'Stop' -ServerInstance $SqlInstance -Username $Credential.UserName -Password $Credential.GetNetworkCredential().Password  -QueryTimeout 0 -Verbose:($PSBoundParameters['Verbose'] -eq $true) 
+        }
     
-        Invoke-Sqlcmd -Query $SqlCommand -ErrorAction 'Stop' -ServerInstance $SqlInstance -Username $Credential.UserName -Password $Credential.GetNetworkCredential().Password  -QueryTimeout 0 -Verbose:($PSBoundParameters['Verbose'] -eq $true) 
-    
-        Write-Verbose 'SQL command is executed.'
+        Write-Verbose "SQL command is executed. [$SqlCommand]"
     }
 }
 
